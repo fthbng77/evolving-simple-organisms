@@ -2,31 +2,33 @@ import operator
 from collections import defaultdict
 from math import floor
 from random import randint, random, sample, uniform
-from simulation import Predator, Prey
-import numpy as np
+from modules import Organism, NeuralNetwork, Prey as CustomPrey, Predator as CustomPredator
 
-def mutate_weights(settings, weights, weight_type):
+def mutate_weights(settings, neural_network, weight_type):
     if weight_type == 'wih':
         index_row = randint(0, settings['hnodes']-1)
-        weights[index_row] = weights[index_row] * uniform(0.9, 1.1)
+        neural_network.hidden.weight.data[index_row] *= uniform(0.9, 1.1)
     else:  # MUTATE: WHO WEIGHTS
         index_row = randint(0, settings['onodes']-1)
         index_col = randint(0, settings['hnodes']-1)
-        weights[index_row][index_col] = weights[index_row][index_col] * uniform(0.9, 1.1)
+        neural_network.output.weight.data[index_row][index_col] *= uniform(0.9, 1.1)
     
-    weights = np.clip(weights, -1, 1)  # Ensures weights stay in the range [-1, 1]
-    return weights
+    neural_network.hidden.weight.data.clamp_(-1, 1)  # Ensures weights stay in the range [-1, 1]
+    neural_network.output.weight.data.clamp_(-1, 1)  # Ensures weights stay in the range [-1, 1]
+    return neural_network
 
-def crossover_weights(org1_weights, org2_weights):
+def crossover_weights(org1, org2):
     crossover_weight = random()
-    return (crossover_weight * org1_weights) + ((1 - crossover_weight) * org2_weights)
+    wih_new = (crossover_weight * org1.hidden.weight.data) + ((1 - crossover_weight) * org2.hidden.weight.data)
+    who_new = (crossover_weight * org1.output.weight.data) + ((1 - crossover_weight) * org2.output.weight.data)
+    return wih_new, who_new
 
 def evolve(settings, entities_old, gen, entity_type):
     entities_new = [] 
     elitism_num = int(floor(settings['elitism'] * settings['pop_size']))
     new_entities = settings['pop_size'] - elitism_num
 
-    #--- GET STATS FROM CURRENT GENERATION ----------------+
+    # Get stats from current generation
     stats = defaultdict(int)
     for entity in entities_old:
         if entity.fitness > stats['BEST'] or stats['BEST'] == 0:
@@ -38,35 +40,39 @@ def evolve(settings, entities_old, gen, entity_type):
 
     stats['AVG'] = stats['SUM'] / stats['COUNT']
 
-    if entity_type not in ['prey', 'predator']:  # entity_type kontrolü ekle
+    if entity_type not in ['prey', 'predator']:
         raise ValueError("Invalid entity_type. Expected 'prey' or 'predator'.")
 
     entities_sorted = sorted(entities_old, key=operator.attrgetter('fitness'), reverse=True)
+    
     if entity_type == 'prey':
-        entities_new.extend([Prey(settings, wih=entities_sorted[i].wih, who=entities_sorted[i].who, name=entities_sorted[i].name) for i in range(elitism_num)])
+        entities_new.extend([CustomPrey(settings, neural_network=NeuralNetwork(settings['inodes'], settings['hnodes'], settings['onodes']), name=entities_sorted[i].name) for i in range(elitism_num)])
     elif entity_type == 'predator':
-        entities_new.extend([Predator(settings, wih=entities_sorted[i].wih, who=entities_sorted[i].who, name=entities_sorted[i].name) for i in range(elitism_num)])
+        entities_new.extend([CustomPredator(settings, neural_network=entities_sorted[i].neural_network.copy(), name=entities_sorted[i].name) for i in range(elitism_num)])
 
-    #--- GENERATE NEW ENTITIES ---------------------------+
+    # Generate new entities
     for w in range(0, new_entities):
-        # SELECTION (TRUNCATION SELECTION)
+        # Selection (truncation selection)
         candidates = range(0, elitism_num)
         random_index = sample(candidates, 2)
         entity_1 = entities_sorted[random_index[0]]
         entity_2 = entities_sorted[random_index[1]]
 
-        # CROSSOVER
-        wih_new = crossover_weights(entity_1.wih, entity_2.wih)
-        who_new = crossover_weights(entity_1.who, entity_2.who)
+        # Crossover
+        wih_new, who_new = crossover_weights(entity_1.neural_network, entity_2.neural_network)
 
-        # MUTATION
+        neural_net_new = NeuralNetwork(settings['inodes'], settings['hnodes'], settings['onodes'])
+        neural_net_new.hidden.weight.data = wih_new
+        neural_net_new.output.weight.data = who_new
+
+        # Mutation
         if random() <= settings['mutate']:
-            wih_new = mutate_weights(settings, wih_new, 'wih')
-            who_new = mutate_weights(settings, who_new, 'who')
+            neural_net_new = mutate_weights(settings, neural_net_new, 'wih')
+            neural_net_new = mutate_weights(settings, neural_net_new, 'who')
 
         if entity_type == 'prey':
-            entities_new.append(Prey(settings, wih=wih_new, who=who_new, name=f'gen[{gen}]-entity[{w}]'))
+            entities_new.append(CustomPrey(settings, neural_network=neural_net_new, name=f'gen[{gen}]-entity[{w}]'))
         elif entity_type == 'predator':
-            entities_new.append(Predator(settings, wih=wih_new, who=who_new, name=f'gen[{gen}]-entity[{w}]'))
+            entities_new.append(CustomPredator(settings, neural_network=neural_net_new, name=f'gen[{gen}]-entity[{w}]'))
 
     return entities_new, stats

@@ -1,9 +1,8 @@
-from simulation import food, simulate, initialize_window
+from simulation import simulate, initialize_window
 from evolution import evolve
 from random import uniform
 import numpy as np
-from organisms import Predator, Prey
-
+from modules import Predator, Prey, Food
 # Simulation settings
 settings = {
     'pop_size': 100,       # Number of organisms
@@ -11,7 +10,7 @@ settings = {
     'gens': 50,          # Number of generations
     'elitism': 0.20,      # Elitism (selection bias)
     'mutate': 0.10,       # Mutation rate
-    'gen_time': 200,      # Generation length (seconds)
+    'gen_time': 50,      # Generation length (seconds)
     'dt': 0.04,           # Simulation time step (dt)
     'dr_max': 720,        # Max rotational speed (degrees per second)
     'v_max': 0.75,        # Max velocity (units per second)
@@ -20,6 +19,9 @@ settings = {
     'x_max': 960.0,       # Arena eastern border
     'y_min': 0.0,         # Arena southern border
     'y_max': 540.0,       # Arena northern border
+    'danger_distance': 15,
+    'food_distance': 10,
+    'eat_distance': 3,
     'plot': True,         # Plot final generation?
     'inodes': 2,          # Number of input nodes
     'hnodes': 5,          # Number of hidden nodes
@@ -30,12 +32,12 @@ def run(settings):
     window = initialize_window()
 
     # Populate the environment with food
-    foods = [food(settings) for _ in range(settings['food_num'])]
+    foods = [Food(settings) for _ in range(settings['food_num'])]
 
-    preys = [Prey(settings, name=f'gen[x]-prey[{i}]')  # wih ve who belirtilmemiş
+    preys = [Prey(settings, name=f'gen[x]-prey[{i}]') 
              for i in range(settings['pop_size'])]
 
-    predators = [Predator(settings, name=f'gen[x]-predator[{i}]')  # wih ve who belirtilmemiş
+    predators = [Predator(settings, name=f'gen[x]-predator[{i}]')
                  for i in range(settings['pop_size'])]
 
     # Cycle through each generation
