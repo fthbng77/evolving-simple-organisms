@@ -23,11 +23,25 @@ def crossover_weights(org1, org2):
     who_new = (crossover_weight * org1.output.weight.data) + ((1 - crossover_weight) * org2.output.weight.data)
     return wih_new, who_new
 
-def evolve(settings, entities_old, gen, entity_type):
-    entities_new = [] 
-    elitism_num = int(floor(settings['elitism'] * settings['pop_size']))
-    new_entities = settings['pop_size'] - elitism_num
+def evolve(settings, entities_old, gen, organism_type):
+    entities_new = []
+    
+    if organism_type == 'prey':
+        elitism_num = int(floor(settings['elitism'] * settings['prey_count']))
+        inodes = settings['inodes_prey']
+    elif organism_type == 'predator':
+        elitism_num = int(floor(settings['elitism'] * settings['predator_count']))
+        inodes = settings['inodes_predator']
+    else:
+        raise ValueError(f"Invalid organism_type: {organism_type}. Expected 'prey' or 'predator'.")
 
+
+    if organism_type == 'prey':
+        new_entities = settings['prey_count'] - elitism_num
+    elif organism_type == 'predator':
+        new_entities = settings['predator_count'] - elitism_num
+
+        
     # Get stats from current generation
     stats = defaultdict(int)
     for entity in entities_old:
@@ -40,14 +54,14 @@ def evolve(settings, entities_old, gen, entity_type):
 
     stats['AVG'] = stats['SUM'] / stats['COUNT']
 
-    if entity_type not in ['prey', 'predator']:
+    if organism_type not in ['prey', 'predator']:
         raise ValueError("Invalid entity_type. Expected 'prey' or 'predator'.")
 
     entities_sorted = sorted(entities_old, key=operator.attrgetter('fitness'), reverse=True)
     
-    if entity_type == 'prey':
-        entities_new.extend([CustomPrey(settings, neural_network=NeuralNetwork(settings['inodes'], settings['hnodes'], settings['onodes']), name=entities_sorted[i].name) for i in range(elitism_num)])
-    elif entity_type == 'predator':
+    if organism_type == 'prey':
+        entities_new.extend([CustomPrey(settings, neural_network=NeuralNetwork(inodes, settings['hnodes'], settings['onodes']), name=entities_sorted[i].name) for i in range(elitism_num)])
+    elif organism_type == 'predator':
         entities_new.extend([CustomPredator(settings, neural_network=entities_sorted[i].neural_network.copy(), name=entities_sorted[i].name) for i in range(elitism_num)])
 
     # Generate new entities
@@ -61,7 +75,7 @@ def evolve(settings, entities_old, gen, entity_type):
         # Crossover
         wih_new, who_new = crossover_weights(entity_1.neural_network, entity_2.neural_network)
 
-        neural_net_new = NeuralNetwork(settings['inodes'], settings['hnodes'], settings['onodes'])
+        neural_net_new = NeuralNetwork(inodes, settings['hnodes'], settings['onodes'])
         neural_net_new.hidden.weight.data = wih_new
         neural_net_new.output.weight.data = who_new
 
@@ -70,9 +84,8 @@ def evolve(settings, entities_old, gen, entity_type):
             neural_net_new = mutate_weights(settings, neural_net_new, 'wih')
             neural_net_new = mutate_weights(settings, neural_net_new, 'who')
 
-        if entity_type == 'prey':
+        if organism_type == 'prey':
             entities_new.append(CustomPrey(settings, neural_network=neural_net_new, name=f'gen[{gen}]-entity[{w}]'))
-        elif entity_type == 'predator':
+        elif organism_type == 'predator':
             entities_new.append(CustomPredator(settings, neural_network=neural_net_new, name=f'gen[{gen}]-entity[{w}]'))
-
     return entities_new, stats

@@ -3,9 +3,10 @@ from evolution import evolve
 from random import uniform
 import numpy as np
 from modules import Predator, Prey, Food
-# Simulation settings
+
 settings = {
-    'pop_size': 100,       # Number of organisms
+    'prey_count': 100,       # Number of organisms
+    'predator_count':10,
     'food_num': 400,      # Number of food particles
     'gens': 50,          # Number of generations
     'elitism': 0.20,      # Elitism (selection bias)
@@ -23,7 +24,8 @@ settings = {
     'food_distance': 10,
     'eat_distance': 3,
     'plot': True,         # Plot final generation?
-    'inodes': 2,          # Number of input nodes
+    'inodes_prey': 4,
+    'inodes_predator': 2, # Number of input nodes
     'hnodes': 5,          # Number of hidden nodes
     'onodes': 2           # Number of output nodes
 }
@@ -35,10 +37,10 @@ def run(settings):
     foods = [Food(settings) for _ in range(settings['food_num'])]
 
     preys = [Prey(settings, name=f'gen[x]-prey[{i}]') 
-             for i in range(settings['pop_size'])]
+             for i in range(settings['prey_count'])]
 
     predators = [Predator(settings, name=f'gen[x]-predator[{i}]')
-                 for i in range(settings['pop_size'])]
+                 for i in range(settings['predator_count'])]
 
     # Cycle through each generation
     for gen in range(settings['gens']):
