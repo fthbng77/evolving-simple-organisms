@@ -18,4 +18,4 @@ update version:
 
 Creating weights for an organism:
 
-
+![simulation_update](Creating_weights_for_an_organism.png)
