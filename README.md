@@ -13,3 +13,9 @@ for simulation photo:
 update version:
 
 ![simulation_update](simulation-update.png)
+
+
+
+Creating weights for an organism:
+
+![simulation_update](Creating_weights_for_an_organism.png)
