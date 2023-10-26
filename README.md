@@ -1,5 +1,13 @@
 # evolving-simple-organisms
 
+start sminulation:
+
+`cd ~/evolving-simple-organisms/learning_direction`
+`python main.py`
+
+new terminal:
+
+`tensorboard --logdir=logs`
 
 
 
