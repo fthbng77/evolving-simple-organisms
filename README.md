@@ -3,7 +3,8 @@
 start sminulation:
 
 `cd ~/evolving-simple-organisms/learning_direction`
-`python main.py`
+
+`/n python main.py`
 
 new terminal:
 
