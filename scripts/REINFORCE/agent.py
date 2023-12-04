@@ -26,7 +26,11 @@ class Agent:
         self.values = []
 
     def select_action(self, state):
-        state = torch.from_numpy(state).float().unsqueeze(0).cuda()
+        if not isinstance(state, torch.Tensor):
+            state = torch.from_numpy(state).float().unsqueeze(0).cuda()
+        else:
+            # Eğer state zaten bir Tensor ise, doğrudan kullan
+            state = state.float().unsqueeze(0).cuda()
         probabilities, value = self.policy_network(state)
         action_probs = torch.distributions.Categorical(probabilities)
         action = action_probs.sample()
@@ -57,20 +61,30 @@ class Agent:
         advantages = returns - values
 
         for log_prob, value, R, advantage in zip(self.saved_log_probs, self.values, returns, advantages):
-            advantage = advantage.detach()  # avantajı sabitle
+            advantage = advantage.detach()
             policy_loss = -log_prob * advantage
             value_loss = F.mse_loss(torch.tensor([value]).cuda(), torch.tensor([R]).cuda())
             policy_losses.append(policy_loss)
             value_losses.append(value_loss)
 
-        self.actor_optimizer.zero_grad()
-        self.critic_optimizer.zero_grad()
+        if not policy_losses or not value_losses:
+            print("No losses to update policy.")
+            return
 
-        policy_loss = torch.cat(policy_losses).sum()
-        value_loss = torch.cat(value_losses).sum()
+        if len(policy_losses) > 1:
+            policy_loss = torch.cat(policy_losses).sum().clone().detach().requires_grad_(True)
+        elif policy_losses:
+            policy_loss = policy_losses[0].clone().detach().requires_grad_(True)
 
-        policy_loss.backward()
-        value_loss.backward()
+        if len(value_losses) > 1:
+            value_loss = torch.cat(value_losses).sum().clone().detach().requires_grad_(True)
+        elif value_losses:
+            value_loss = value_losses[0].clone().detach().requires_grad_(True)
+
+        if policy_losses:
+            policy_loss.backward()
+        if value_losses:
+            value_loss.backward()
 
         self.actor_optimizer.step()
         self.critic_optimizer.step()

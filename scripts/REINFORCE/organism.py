@@ -11,7 +11,6 @@ RED = (255, 0, 0)
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 
-# Ekran oluşturma
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Organism Learning Game")
 
@@ -39,7 +38,11 @@ class Organism(pygame.sprite.Sprite):
         return distances[:8]
 
     def decide_move(self, sensed_distances):
-        state = torch.FloatTensor(sensed_distances).unsqueeze(0).cuda()
+        if not isinstance(sensed_distances, torch.Tensor):
+            state = torch.FloatTensor(sensed_distances).unsqueeze(0).cuda()
+        else:
+            state = sensed_distances
+
         action, log_prob = self.agent.select_action(state)  # İki değeri de döndür
         return action, log_prob
     
@@ -53,7 +56,7 @@ class Organism(pygame.sprite.Sprite):
         state = torch.FloatTensor(sensed_distances).unsqueeze(0).cuda()
         next_state = torch.FloatTensor(next_sensed_distances).unsqueeze(0).cuda()
         self.agent.store_experience(state, action, reward, next_state, log_prob)
-
+        self.agent.update_policy_gradient()
 
     def execute_action(self, action):
         collision_penalty = 0  # Cezanın başlangıç değeri
@@ -71,7 +74,6 @@ class Organism(pygame.sprite.Sprite):
             self.x = self.x + 5
             self.direction = 0
 
-        # Enerji tüketimi (hareket başına)
         self.energy = self.energy - 10
 
         if self.x <= self.radius or self.x >= WIDTH - self.radius or \

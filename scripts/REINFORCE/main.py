@@ -18,17 +18,18 @@ foods = [Food(screen, WIDTH, HEIGHT) for _ in range(50)]
 death_count = 0 
 
 def compute_reward(org, foods_before, foods_after, collision_penalty):
-    if org.energy <= 0:  # Eğer enerji sıfırsa büyük bir ceza döndür
+    if org.energy <= 0:
         return -100
     elif len(foods_after) < len(foods_before):
-        return 10 + collision_penalty   # yem yendiğinde daha büyük bir ödül
+        return 10 + collision_penalty
     else:
-        return collision_penalty # hareket edildiğinde ve yem yenilmediğinde ceza (veya ödül)
+        return collision_penalty
+
 
 running = True
 score_font = pygame.font.SysFont(None, 35)
 energy_font = pygame.font.SysFont(None, 35)  # Enerjiyi göstermek için yazı fontu
-clock = pygame.time.Clock()  # FPS için saat nesnesi oluşturma
+clock = pygame.time.Clock()
 
 while running:
     for event in pygame.event.get():
@@ -50,19 +51,20 @@ while running:
 
     if len(foods_after) < len(foods_before):
         foods.append(Food(screen, WIDTH, HEIGHT))
-        organism.energy = organism.energy + 10
-        organism.score = organism.score + 10 
+        organism.energy += 10  # Enerjiyi artır
+        organism.score += 10   # Skoru artır
         organism.writer.add_scalar('Score', organism.score, organism.agent.global_step)
 
     if organism.energy <= 0:
         organism.reset()
         foods = [Food(screen, WIDTH, HEIGHT) for _ in range(50)]
-        death_count = death_count + 1
+        death_count += 1
         organism.agent.end_of_episode()
 
     next_sensed_distances = organism.sense_food(foods)
     organism.learn_from_experience(sensed_distances, action, reward, next_sensed_distances, log_prob)  # log_prob'u da argüman olarak ekle
 
+    organism.agent.global_step += 1  # Global adımı artır
     organism.draw()
     for food in foods:
         food.draw()
