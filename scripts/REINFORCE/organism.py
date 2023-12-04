@@ -5,8 +5,6 @@ import random
 from agent import Agent
 
 WIDTH, HEIGHT = 800, 600
-
-# Renkler
 RED = (255, 0, 0)
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
@@ -30,20 +28,17 @@ class Organism(pygame.sprite.Sprite):
         self.writer = self.agent.writer
 
     def sense_food(self, foods):
-        distances = []
+        sensed_info = []
         for food in foods:
             dist = math.sqrt((food.x - self.x) ** 2 + (food.y - self.y) ** 2)
-            distances.append(dist)
-        distances.sort()
-        return distances[:8]
+            angle = math.atan2(food.y - self.y, food.x - self.x) - self.direction
+            sensed_info.append((dist, angle))
+        sensed_info.sort(key=lambda x: x[0])
+        return sensed_info[:8]
 
-    def decide_move(self, sensed_distances):
-        if not isinstance(sensed_distances, torch.Tensor):
-            state = torch.FloatTensor(sensed_distances).unsqueeze(0).cuda()
-        else:
-            state = sensed_distances
-
-        action, log_prob = self.agent.select_action(state)  # İki değeri de döndür
+    def decide_move(self, sensed_info):
+        state = torch.FloatTensor([item for sublist in sensed_info for item in sublist]).unsqueeze(0).cuda()
+        action, log_prob = self.agent.select_action(state)
         return action, log_prob
     
     def reset(self):
@@ -52,42 +47,41 @@ class Organism(pygame.sprite.Sprite):
         self.energy = 100
         self.score = 0
     
-    def learn_from_experience(self, sensed_distances, action, reward, next_sensed_distances, log_prob):
-        state = torch.FloatTensor(sensed_distances).unsqueeze(0).cuda()
-        next_state = torch.FloatTensor(next_sensed_distances).unsqueeze(0).cuda()
+    def learn_from_experience(self, sensed_info, action, reward, next_sensed_info, log_prob):
+        state = torch.FloatTensor([item for sublist in sensed_info for item in sublist]).unsqueeze(0).cuda()
+        next_state = torch.FloatTensor([item for sublist in next_sensed_info for item in sublist]).unsqueeze(0).cuda()
         self.agent.store_experience(state, action, reward, next_state, log_prob)
         self.agent.update_policy_gradient()
 
     def execute_action(self, action):
-        collision_penalty = 0  # Cezanın başlangıç değeri
+        speed = 5
+        collision_penalty = 0
+        angle_change = math.pi / 8
             
         if action == 0:  # Up
-            self.y = self.y - 5
-            self.direction = -3.14/2
+            self.y -= speed
         elif action == 1:  # Down
-            self.y = self.y + 5
-            self.direction = 3.14/2
+            self.y += speed
         elif action == 2:  # Left
-            self.x = self.x - 5
-            self.direction = 3.14
+            self.x -= speed
+            self.direction -= angle_change
         elif action == 3:  # Right
-            self.x = self.x + 5
-            self.direction = 0
+            self.x += speed
+            self.direction += angle_change
 
-        self.energy = self.energy - 10
+        self.energy -= 1  # Basit enerji tüketimi modeli
 
+        # Ekran sınırlarına çarpma cezası
         if self.x <= self.radius or self.x >= WIDTH - self.radius or \
-        self.y <= self.radius or self.y >= HEIGHT - self.radius:
-            collision_penalty = -0.1
-            self.energy = self.energy - 0.1
+           self.y <= self.radius or self.y >= HEIGHT - self.radius:
+            collision_penalty = -5
+            self.energy -= 5
 
         # Ekran sınırları içinde kalmasını sağlama
         self.x = max(self.radius, min(self.x, WIDTH - self.radius))
         self.y = max(self.radius, min(self.y, HEIGHT - self.radius))
 
-        # Skoru güncelleme (kenarlara çarpma durumunda)
-        self.score = self.score + collision_penalty
-
+        self.score += collision_penalty
         return collision_penalty
 
     def draw(self):
