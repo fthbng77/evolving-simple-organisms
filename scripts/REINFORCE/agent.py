@@ -25,19 +25,33 @@ class Agent:
         self.saved_log_probs = []
         self.values = []
 
+    #log_prob aksiyonun politika ağı tarafından ne kadar tercih edildiğini ifade eder.
     def select_action(self, state):
-        if not isinstance(state, torch.Tensor):
-            state = torch.from_numpy(state).float().unsqueeze(0).cuda()
-        else:
-            # Eğer state zaten bir Tensor ise, doğrudan kullan
-            state = state.float().unsqueeze(0).cuda()
-        probabilities, value = self.policy_network(state)
-        action_probs = torch.distributions.Categorical(probabilities)
-        action = action_probs.sample()
-        log_prob = action_probs.log_prob(action)
-        action = action.item()
+        sample = random.random()
 
-        self.values.append(value.item())
+        if state.size(1) != 8:
+            state = state[:, :8]
+
+        if not isinstance(state, torch.Tensor):
+            state = torch.FloatTensor(state)
+        if torch.cuda.is_available() and not state.is_cuda:
+            state = state.cuda()
+        
+        print("State shape:", state.shape)
+        print("state size: ", state.size())
+
+        with torch.no_grad():
+            policy, _ = self.policy_network(state)
+            probabilities = torch.distributions.Categorical(policy)
+            device = policy.device
+            if sample > self.epsilon:
+                action = probabilities.sample().item()
+            else:
+                action = random.randrange(self.action_size)
+
+            action_tensor = torch.tensor([action], device=device)
+            log_prob = probabilities.log_prob(action_tensor).item()
+        self.epsilon = max(self.epsilon * self.epsilon_decay, self.epsilon_min)
         return action, log_prob
 
 
@@ -70,7 +84,8 @@ class Agent:
         if not policy_losses or not value_losses:
             print("No losses to update policy.")
             return
-
+        
+        #Burada actor-critic yapısı var politika kayıpları ve deer kayıpları ayrı ayrı hesaplanıyor.
         if len(policy_losses) > 1:
             policy_loss = torch.cat(policy_losses).sum().clone().detach().requires_grad_(True)
         elif policy_losses:
