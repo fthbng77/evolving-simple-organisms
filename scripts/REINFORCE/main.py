@@ -66,6 +66,7 @@ while running:
         organism.reset()
         foods = [Food(screen, WIDTH, HEIGHT) for _ in range(50)]
         death_count += 1
+        organism.agent.death_count = death_count
         organism.agent.end_of_episode()
 
     next_sensed_distances = organism.sense_food(foods)

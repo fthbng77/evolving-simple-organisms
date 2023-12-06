@@ -24,6 +24,7 @@ class Agent:
         self.rewards = []
         self.saved_log_probs = []
         self.values = []
+        self.death_count = 0
         self.device = torch.device('cuda')
 
     #log_prob aksiyonun politika ağı tarafından ne kadar tercih edildiğini ifade eder.
@@ -46,7 +47,7 @@ class Agent:
 
             action_tensor = torch.tensor([action], device=device)
             log_prob = probabilities.log_prob(action_tensor).item()
-        self.epsilon = max(self.epsilon * self.epsilon_decay, self.epsilon_min)
+
         return action, log_prob
 
 
@@ -117,6 +118,8 @@ class Agent:
         self.values.clear()
 
     def end_of_episode(self):
-        self.epsilon = max(self.epsilon_min, self.epsilon * self.epsilon_decay)
+        self.death_count += 1
+        if self.death_count > 100:
+            self.epsilon = max(self.epsilon_min, self.epsilon * self.epsilon_decay)
         print(f"Epsilon Value: {self.epsilon:.4f}")
         self.update_policy_gradient()
