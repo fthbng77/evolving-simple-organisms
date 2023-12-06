@@ -2,9 +2,11 @@
 
 start sminulation:
 
-`cd ~/evolving-simple-organisms/learning_direction`
+```
+cd ~/evolving-simple-organisms/scripts/REINFORCE
 
-`python main.py`
+python main.py
+```
 
 new terminal:
 
