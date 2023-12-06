@@ -61,7 +61,8 @@ class Agent:
             state_tensor = state.to(self.device)
 
         value = self.policy_network.actor(state_tensor)
-        self.values.append(value.item())
+        self.values.append(value.mean().item())
+
 
 
     def update_policy_gradient(self):
