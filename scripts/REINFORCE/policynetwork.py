@@ -4,9 +4,10 @@ import torch.optim as optim
 import random
 
 class PolicyNetwork(nn.Module):
-    def __init__(self, input_dim, output_dim, hidden_dim=32, dropout_prob=0.2):
+    def __init__(self, output_dim, input_dim=8, hidden_dim=32, dropout_prob=0.2, device='cuda'):
         super(PolicyNetwork, self).__init__()
         self.dropout_prob = dropout_prob
+        self.device = device
 
         # Aktör Ağı (Politika Ağı)
         self.actor = nn.Sequential(
@@ -16,7 +17,7 @@ class PolicyNetwork(nn.Module):
             nn.Dropout(self.dropout_prob),
             nn.Linear(hidden_dim, output_dim),
             nn.Softmax(dim=-1)
-        )
+        ).to(self.device)
 
         # Eleştirmen Ağı (Değerlendirme Ağı)
         self.critic = nn.Sequential(
@@ -25,7 +26,7 @@ class PolicyNetwork(nn.Module):
             nn.ReLU(),
             nn.Dropout(self.dropout_prob),
             nn.Linear(hidden_dim, 1)  # Durumun değerini tahmin etmek için tek bir çıktı
-        )
+        ).to(self.device)
 
     def forward(self, x):
         policy = self.actor(x)  # Politika ağından eylem olasılıkları

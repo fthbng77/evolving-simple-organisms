@@ -37,7 +37,7 @@ class Organism(pygame.sprite.Sprite):
         return sensed_info[:8]
 
     def decide_move(self, sensed_info):
-        state = torch.FloatTensor([item for sublist in sensed_info for item in sublist]).unsqueeze(0).cuda()
+        state = torch.FloatTensor([item for sublist in sensed_info for item in sublist]).unsqueeze(0).to(self.agent.device)
         action, log_prob = self.agent.select_action(state)
         return action, log_prob
     
@@ -48,8 +48,8 @@ class Organism(pygame.sprite.Sprite):
         self.score = 0
     
     def learn_from_experience(self, sensed_info, action, reward, next_sensed_info, log_prob):
-        state = torch.FloatTensor([item for sublist in sensed_info for item in sublist]).unsqueeze(0).cuda()
-        next_state = torch.FloatTensor([item for sublist in next_sensed_info for item in sublist]).unsqueeze(0).cuda()
+        state = torch.FloatTensor([item for sublist in sensed_info for item in sublist]).unsqueeze(0).to(self.agent.device)
+        next_state = torch.FloatTensor([item for sublist in next_sensed_info for item in sublist]).unsqueeze(0).to(self.agent.device)
         self.agent.store_experience(state, action, reward, next_state, log_prob)
         self.agent.update_policy_gradient()
 

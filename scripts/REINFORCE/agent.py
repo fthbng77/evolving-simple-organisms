@@ -10,7 +10,7 @@ from tensorboardX import SummaryWriter
 class Agent:
     def __init__(self, input_dim, output_dim, hidden_dim=32, learning_rate=0.001, gamma=0.99, epsilon=1.0, epsilon_decay=0.998, epsilon_min=0.05):
         torch.autograd.set_detect_anomaly(True)
-        self.policy_network = PolicyNetwork(input_dim, output_dim, hidden_dim).cuda()
+        self.policy_network = PolicyNetwork(output_dim, input_dim, hidden_dim).cuda()
         self.actor_optimizer = optim.Adam(self.policy_network.actor.parameters(), lr=learning_rate)
         self.critic_optimizer = optim.Adam(self.policy_network.critic.parameters(), lr=learning_rate)
         self.gamma = gamma
@@ -24,6 +24,7 @@ class Agent:
         self.rewards = []
         self.saved_log_probs = []
         self.values = []
+        self.device = torch.device('cuda')
 
     #log_prob aksiyonun politika ağı tarafından ne kadar tercih edildiğini ifade eder.
     def select_action(self, state):
@@ -33,12 +34,9 @@ class Agent:
             state = state[:, :8]
 
         if not isinstance(state, torch.Tensor):
-            state = torch.FloatTensor(state)
-        if torch.cuda.is_available() and not state.is_cuda:
+            state = torch.FloatTensor(state).cuda()
+        elif not state.is_cuda:
             state = state.cuda()
-        
-        print("State shape:", state.shape)
-        print("state size: ", state.size())
 
         with torch.no_grad():
             policy, _ = self.policy_network(state)
@@ -60,7 +58,20 @@ class Agent:
         self.rewards.append(reward)
         self.saved_log_probs.append(log_prob)
 
+        if not isinstance(state, torch.Tensor):
+            state_tensor = torch.tensor(state, dtype=torch.float32).to(self.device)
+        else:
+            state_tensor = state.to(self.device)
+
+        _, value = self.policy_network.actor(state_tensor)
+        self.values.append(value.item())
+
+
     def update_policy_gradient(self):
+        if len(self.rewards) == 0:
+            print("No rewards to update policy.")
+            return
+        
         R = 0
         returns = []
         policy_losses = []
@@ -85,7 +96,6 @@ class Agent:
             print("No losses to update policy.")
             return
         
-        #Burada actor-critic yapısı var politika kayıpları ve deer kayıpları ayrı ayrı hesaplanıyor.
         if len(policy_losses) > 1:
             policy_loss = torch.cat(policy_losses).sum().clone().detach().requires_grad_(True)
         elif policy_losses:
