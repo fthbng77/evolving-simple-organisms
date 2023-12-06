@@ -24,7 +24,7 @@ class Organism(pygame.sprite.Sprite):
         self.direction = random.uniform(0, 2 * math.pi)
         
         self.score = 0.0
-        self.agent = Agent(input_dim=8, output_dim=4)
+        self.agent = Agent(input_dim=16, output_dim=4)
         self.writer = self.agent.writer
 
     def sense_food(self, foods):

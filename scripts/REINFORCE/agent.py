@@ -30,9 +30,6 @@ class Agent:
     def select_action(self, state):
         sample = random.random()
 
-        if state.size(1) != 8:
-            state = state[:, :8]
-
         if not isinstance(state, torch.Tensor):
             state = torch.FloatTensor(state).cuda()
         elif not state.is_cuda:
@@ -63,7 +60,7 @@ class Agent:
         else:
             state_tensor = state.to(self.device)
 
-        _, value = self.policy_network.actor(state_tensor)
+        value = self.policy_network.actor(state_tensor)
         self.values.append(value.item())
 
 
