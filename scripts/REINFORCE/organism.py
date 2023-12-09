@@ -35,7 +35,8 @@ class Organism(pygame.sprite.Sprite):
             sensed_info.append((dist, angle))
         sensed_info.sort(key=lambda x: x[0])
         return sensed_info[:8]
-
+    
+    #yapay zekanın karar mekanizması burada kullanılıyor.
     def decide_move(self, sensed_info):
         state = torch.FloatTensor([item for sublist in sensed_info for item in sublist]).unsqueeze(0).to(self.agent.device)
         action, log_prob = self.agent.select_action(state)
@@ -69,7 +70,7 @@ class Organism(pygame.sprite.Sprite):
             self.x += speed
             self.direction += angle_change
 
-        self.energy -= 1  # Basit enerji tüketimi modeli
+        self.energy -= 0.25
 
         # Ekran sınırlarına çarpma cezası
         if self.x <= self.radius or self.x >= WIDTH - self.radius or \

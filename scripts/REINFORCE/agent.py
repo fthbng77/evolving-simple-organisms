@@ -8,7 +8,7 @@ from tensorboardX import SummaryWriter
 #torch.autograd.set_detect_anomaly(True)
 
 class Agent:
-    def __init__(self, input_dim, output_dim, hidden_dim=32, learning_rate=0.001, gamma=0.5, epsilon=1.0, epsilon_decay=0.998, epsilon_min=0.05):
+    def __init__(self, input_dim, output_dim, hidden_dim=128, learning_rate=0.0001, gamma=0.9, epsilon=0.8, epsilon_decay=1, epsilon_min=0.05):
         torch.autograd.set_detect_anomaly(True)
         self.policy_network = PolicyNetwork(output_dim, input_dim, hidden_dim).cuda()
         self.actor_optimizer = optim.Adam(self.policy_network.actor.parameters(), lr=learning_rate)
@@ -18,7 +18,7 @@ class Agent:
         self.epsilon_decay = epsilon_decay
         self.epsilon_min = epsilon_min
         self.action_size = output_dim
-        self.memory = ReplayMemory(75000)
+        self.memory = ReplayMemory(200000)
         self.writer = SummaryWriter(log_dir='./logs')
         self.global_step = 0
         self.rewards = []

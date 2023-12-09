@@ -1,0 +1,16 @@
+1-Farklı hiperparametreler ile denemeler sonucunda hedeflenilen 200 score ulaşılamadı. Öğrenme süreci beklenilen kadar güzel değildi.2000 ölüp yeniden dirilme sonucu beklenen performans alınamadı.
+
+learning_rate yüksek tutunca güzel sonuç alınmıyor.
+
+Denelinen hiperparametreler:
+
+
+hidden_dim=128, learning_rate=0.0001, gamma=0.9, epsilon=0.8
+
+hidden_dim=128, learning_rate=0.001, gamma=0.9, epsilon=0,5
+
+hidden_dim=128, learning_rate=0.01, gamma=0.9, epsilon=0.8
+
+hidden_dim=128, learning_rate=0.01, gamma=0.9, epsilon=1, epsilon_decay=0,998
+
+hidden_dim=64, learning_rate=0.01, gamma=0.9, epsilon=1, epsilon_decay=0,998
