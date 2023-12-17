@@ -1,12 +1,22 @@
 # evolving-simple-organisms
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1yFYZgkbBtIFWZ6LVQ0an5vKQ654s3h-f?usp=sharing)
 
+Colab: 
+
+colab üzerinde çalıştırmak isteyenler için eğitim sonucunda gelen ağırlık dosyasını çalıştırabilir:
+
+```
+cd ~/evolving-simple-organisms/scripts/one-way-learning/colab
+
+python test.py
+```
+
 start sminulation:
 
 ```
-cd ~/evolving-simple-organisms/scripts/REINFORCE
+cd ~/evolving-simple-organisms/scripts/one-way-learning
 
-python main.py
+python agent.py
 ```
 
 new terminal:
