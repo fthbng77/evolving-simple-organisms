@@ -1,4 +1,5 @@
 # evolving-simple-organisms
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1yFYZgkbBtIFWZ6LVQ0an5vKQ654s3h-f?usp=sharing)
 
 start sminulation:
 
