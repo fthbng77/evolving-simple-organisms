@@ -3,7 +3,6 @@ import numpy as np
 import random
 import math
 
-# Pygame başlangıcı ve boyut tanımlamaları
 pygame.init()
 WIDTH, HEIGHT = 320, 240
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
