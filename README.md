@@ -23,6 +23,18 @@ new terminal:
 
 `tensorboard --logdir=logs`
 
+## REINFORCE experiments
+
+The one-food baseline and multi-food scenario live in `scripts/REINFORCE`.
+
+```bash
+cd scripts/REINFORCE
+python main.py --scenario scenarios/one_food.json
+python main.py --scenario scenarios/multi_food.json
+```
+
+Each run writes checkpoints and TensorBoard events to `runs/<scenario>/<timestamp>/`.
+
 
 
 
