@@ -1,55 +1,59 @@
-# evolving-simple-organisms
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1yFYZgkbBtIFWZ6LVQ0an5vKQ654s3h-f?usp=sharing)
+# Evolving Simple Organisms
 
-Colab: 
+Three organisms learn to collect food and navigate obstacles through reinforcement learning.
 
-colab üzerinde çalıştırmak isteyenler için eğitim sonucunda gelen ağırlık dosyasını çalıştırabilir:
+## Experiment folders
 
-```
-cd ~/evolving-simple-organisms/scripts/one-way-learning/colab
+| Folder | Experiment |
+| --- | --- |
+| `scripts/single_organism_food_learning` | Single-organism food-learning baseline and its Colab files. |
+| `scripts/organism_rl` | Shared-policy multi-organism reinforcement-learning experiments. |
 
-python test.py
-```
+## Active experiment: PPO obstacle curriculum
 
-start sminulation:
+The current experiment lives in `scripts/organism_rl`. One shared PPO policy trains three organisms in stages:
 
-```
-cd ~/evolving-simple-organisms/scripts/one-way-learning
-
-python agent.py
-```
-
-new terminal:
-
-`tensorboard --logdir=logs`
-
-## REINFORCE experiments
-
-The one-food baseline and multi-food scenario live in `scripts/REINFORCE`.
+1. Collect food without obstacles.
+2. Navigate around one obstacle.
+3. Navigate around two fixed obstacles.
 
 ```bash
-cd scripts/REINFORCE
-python main.py --scenario scenarios/one_food.json
-python main.py --scenario scenarios/multi_food.json
+cd scripts/organism_rl
+python ppo_curriculum_main.py --scenario scenarios/ppo_curriculum.json
 ```
 
-Each run writes checkpoints and TensorBoard events to `runs/<scenario>/<timestamp>/`.
+Every 5,000 population episodes, the policy is evaluated on 100 fixed unseen environments. The next stage begins only after the configured blind-test target is reached. Results, checkpoints, and TensorBoard logs are written to `runs/ppo_obstacle_curriculum/<timestamp>/`.
 
+```bash
+tensorboard --logdir runs/ppo_obstacle_curriculum
+```
 
+The simulation uses pastel cells, cilia, a direction tail, yellow nutrients, and fixed gray obstacles. These visuals do not alter the learning dynamics.
 
+## Staged food-navigation and evolution
 
-for simulation photo:
+For the evolutionary experiment, first train a reusable movement policy. Each episode has one cell with randomized body traits and a nutrient at a random visible direction. The run stops early only after the fixed blind evaluation reaches 90% food-reaching success.
 
-![simulation](imgs/simulation.png)
+```bash
+cd scripts/organism_rl
+env -u PYTHONPATH -u PYTHONHOME ../../.venv/bin/python food_navigation_pretrain.py
+```
 
+It writes `food_navigation_pretrained.pt` plus checkpoints at episodes 500, 2,500, and 5,000 under `runs/food_navigation_pretrain/<timestamp>/checkpoints/`.
 
+Reuse that policy during evolution without updating it, so evolution cannot erase the learned movement skill:
 
-update version:
+```bash
+env -u PYTHONPATH -u PYTHONHOME ../../.venv/bin/python evolutionary_ppo_main.py \
+  --render \
+  --pretrained-policy runs/food_navigation_pretrain/<timestamp>/checkpoints/food_navigation_pretrained.pt
+```
 
-![simulation_update](imgs/simulation-update.png)
+Add `--train-policy` only for a later, explicit fine-tuning experiment.
 
+Inspect a saved stage-1 policy without slowing training:
 
-
-Creating weights for an organism:
-
-![simulation_update](imgs/Creating_weights_for_an_organism.png)
+```bash
+env -u PYTHONPATH -u PYTHONHOME ../../.venv/bin/python food_navigation_watch.py \
+  runs/food_navigation_pretrain/<timestamp>/checkpoints/food_navigation_pretrained.pt
+```

@@ -1,0 +1,24 @@
+{
+  "name": "evolutionary_energy_economy",
+  "initial_population": 20,
+  "population_cap": 60,
+  "food_count": 60,
+  "ignore_other_cells": true,
+  "food_spawn_distance": {"minimum": 60, "maximum": 150},
+  "energy_costs": {
+    "base": 0.02,
+    "metabolism": 0.12,
+    "speed": 0.06,
+    "sensor_range": 0.06,
+    "food_energy": 0.03
+  },
+  "max_simulation_steps": 10000000,
+  "max_deaths": 5000,
+  "death_checkpoints": [100, 500, 1000, 2500, 5000],
+  "action_repeat": 5,
+  "simulation_steps_per_frame": 10,
+  "fps": 30,
+  "ppo_update_transitions": 120,
+  "metric_interval": 1000,
+  "mutation_rate": 0.1
+}

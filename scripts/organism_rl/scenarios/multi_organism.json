@@ -1,0 +1,14 @@
+{
+  "name": "multi_organism",
+  "organism_count": 3,
+  "food_count": 6,
+  "target_lock": true,
+  "food_distance": {"minimum": 80, "maximum": 180},
+  "max_episodes": 100000,
+  "checkpoint_episodes": [500, 1000, 2500, 5000, 10000, 20000],
+  "checkpoint_interval_after": 20000,
+  "checkpoint_interval": 10000,
+  "action_repeat": 5,
+  "simulation_steps_per_frame": 50,
+  "fps": 30
+}

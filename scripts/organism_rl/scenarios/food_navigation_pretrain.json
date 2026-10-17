@@ -1,0 +1,12 @@
+{
+  "name": "food_navigation_pretrain",
+  "training_episodes": 5000,
+  "max_decisions_per_episode": 60,
+  "food_distance": {"minimum": 60, "maximum": 150},
+  "action_repeat": 5,
+  "evaluation_interval": 250,
+  "evaluation_episodes": 100,
+  "success_target": 0.9,
+  "checkpoint_episodes": [500, 2500, 5000],
+  "fps": 30
+}
